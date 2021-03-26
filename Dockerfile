@@ -25,6 +25,7 @@ ENV TINI_VERSION v0.18.0
 # download tini and tini gpg key
 # this is a Docker approved pattern. See: https://github.com/docker-library/official-images#init
 COPY gpg-retry-download.sh /gpg-retry-download.sh
+RUN chmod 777 gpg-retry-download.sh
 RUN curl --connect-timeout 5 --speed-limit 10000 --speed-time 5 --location \
          --retry 10 --retry-max-time 300 --output /tini \
          https://github.com/krallin/tini/releases/download/${TINI_VERSION}/tini && \
