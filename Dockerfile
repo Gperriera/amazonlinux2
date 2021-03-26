@@ -39,7 +39,7 @@ RUN curl --connect-timeout 5 --speed-limit 10000 --speed-time 5 --location \
 #####
 FROM amazonlinux:2
 
-# Update for security and install epel repo
+# Update for security and install epel rep
 RUN yum update -y && \
     yum install -y https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm && \
     yum -y clean all && \
