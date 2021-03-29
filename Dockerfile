@@ -114,11 +114,11 @@ RUN    mkdir -p /ep/conf \
     && echo "# an empty ep.properties file" > /ep/conf/ep.properties
 
 # Add the vault and envconsul binaries
-COPY --from=hashicorp-downloader /vault /ep
-COPY --from=hashicorp-downloader /envconsul /ep
+COPY /vault /ep
+COPY /envconsul /ep
 
 # Add git-crypt binaries
-COPY --from=git-crypt-build /usr/local/bin/git-crypt /usr/local/bin/git-crypt    
+COPY /usr/local/bin/git-crypt /usr/local/bin/git-crypt    
 # Set environment variables.
 ENV HOME /root
 ENV JAVA_HOME /usr/lib/jvm/zulu-8
