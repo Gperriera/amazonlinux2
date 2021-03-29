@@ -101,7 +101,8 @@ RUN curl --connect-timeout 5 --speed-limit 10000 --speed-time 5 --location \
     && cd /git-crypt-0.6.0 \
     && make install
 
-
+# Add git-crypt binaries
+COPY --from=git-crypt-build /usr/local/bin/git-crypt /usr/local/bin/git-crypt
 # install dependencies
 RUN yum update -y && \
     yum install -y git openssl jq && \
