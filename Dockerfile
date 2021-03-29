@@ -77,7 +77,7 @@ RUN /gpg-retry-download.sh \
 	91A6E7F85D05C65630BEF18951852D87348FFC4C \
 	&& rm /gpg-retry-download.sh
 
-COPY scripts/downloadHashicorpBinary.sh /downloadHashicorpBinary.sh
+COPY /downloadHashicorpBinary.sh /downloadHashicorpBinary.sh
 RUN chmod +x /downloadHashicorpBinary.sh
 
 # Download the vault binary
