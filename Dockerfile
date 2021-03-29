@@ -75,6 +75,7 @@ RUN yum update -y && \
     rm -rf /var/cache/yum
 
 COPY /gpg-retry-download.sh /gpg-retry-download.sh
+RUN chmod 777 gpg-retry-download.sh
 # see https://www.apache.org/dist/tomcat/tomcat-8/KEYS
 RUN /gpg-retry-download.sh \
 	91A6E7F85D05C65630BEF18951852D87348FFC4C \
