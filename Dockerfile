@@ -64,6 +64,48 @@ RUN curl --connect-timeout 5 --speed-limit 10000 --speed-time 5 --location \
     chmod +x mo && \
     mv mo /usr/local/bin/
 
+
+RUN yum update -y && \
+    yum install -y unzip upx && \
+    yum -y clean all && \
+    rm -rf /var/cache/yum
+    
+COPY Dockerfile-libs/gpg-retry-download.sh /gpg-retry-download.sh
+# see https://www.apache.org/dist/tomcat/tomcat-8/KEYS
+RUN /gpg-retry-download.sh \
+	91A6E7F85D05C65630BEF18951852D87348FFC4C \
+	&& rm /gpg-retry-download.sh
+
+COPY scripts/downloadHashicorpBinary.sh /downloadHashicorpBinary.sh
+RUN chmod +x /downloadHashicorpBinary.sh
+
+# Download the vault binary
+RUN /downloadHashicorpBinary.sh --app vault --version 1.1.3
+RUN chmod +x vault
+
+# Download the envconsul binary
+RUN /downloadHashicorpBinary.sh --app envconsul --version 0.7.3
+RUN chmod +x envconsul
+
+# install dependencies
+RUN yum update -y && \
+    yum install -y git openssl gcc-c++ openssl-devel tar && \
+    yum -y clean all && \
+    rm -rf /var/cache/yum
+
+RUN curl --connect-timeout 5 --speed-limit 10000 --speed-time 5 --location \
+            --retry 10 --retry-max-time 300 --output /git-crypt-0.6.0.tar.gz \
+            --silent --show-error https://www.agwa.name/projects/git-crypt/downloads/git-crypt-0.6.0.tar.gz \
+    && tar xzf /git-crypt-0.6.0.tar.gz \
+    && cd /git-crypt-0.6.0 \
+    && make install
+
+
+# install dependencies
+RUN yum update -y && \
+    yum install -y git openssl jq && \
+    yum -y clean all && \
+    rm -rf /var/cache/yum
 # Set environment variables.
 ENV HOME /root
 ENV JAVA_HOME /usr/lib/jvm/zulu-8
