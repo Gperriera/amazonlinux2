@@ -101,13 +101,24 @@ RUN curl --connect-timeout 5 --speed-limit 10000 --speed-time 5 --location \
     && cd /git-crypt-0.6.0 \
     && make install
 
-# Add git-crypt binaries
-COPY --from=git-crypt-build /usr/local/bin/git-crypt /usr/local/bin/git-crypt
+
 # install dependencies
 RUN yum update -y && \
     yum install -y git openssl jq && \
     yum -y clean all && \
     rm -rf /var/cache/yum
+    
+# Create EP directories and files
+RUN    mkdir -p /ep/conf \
+    && mkdir -p /ep/assets \
+    && echo "# an empty ep.properties file" > /ep/conf/ep.properties
+
+# Add the vault and envconsul binaries
+COPY --from=hashicorp-downloader /vault /ep
+COPY --from=hashicorp-downloader /envconsul /ep
+
+# Add git-crypt binaries
+COPY --from=git-crypt-build /usr/local/bin/git-crypt /usr/local/bin/git-crypt    
 # Set environment variables.
 ENV HOME /root
 ENV JAVA_HOME /usr/lib/jvm/zulu-8
