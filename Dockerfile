@@ -38,7 +38,7 @@ RUN curl --connect-timeout 5 --speed-limit 10000 --speed-time 5 --location \
 #####
 # Image build
 #####
-FROM amazonlinux:2
+FROM amazonlinux:2 as hashicorp-downloader
 
 # Update for security and install epel rep
 RUN yum update -y && \
@@ -64,20 +64,23 @@ RUN curl --connect-timeout 5 --speed-limit 10000 --speed-time 5 --location \
     chmod +x mo && \
     mv mo /usr/local/bin/
 
+# Set environment variables.
+ENV HOME /root
+ENV JAVA_HOME /usr/lib/jvm/zulu-8
 
+# install dependencies
 RUN yum update -y && \
     yum install -y unzip upx && \
     yum -y clean all && \
     rm -rf /var/cache/yum
-  
-COPY gpg-retry-download.sh /gpg-retry-download.sh
-RUN chmod 777 gpg-retry-download.sh  
+
+COPY /gpg-retry-download.sh /gpg-retry-download.sh
 # see https://www.apache.org/dist/tomcat/tomcat-8/KEYS
 RUN /gpg-retry-download.sh \
 	91A6E7F85D05C65630BEF18951852D87348FFC4C \
 	&& rm /gpg-retry-download.sh
 
-COPY /downloadHashicorpBinary.sh /downloadHashicorpBinary.sh
+COPY downloadHashicorpBinary.sh /downloadHashicorpBinary.sh
 RUN chmod +x /downloadHashicorpBinary.sh
 
 # Download the vault binary
@@ -87,6 +90,14 @@ RUN chmod +x vault
 # Download the envconsul binary
 RUN /downloadHashicorpBinary.sh --app envconsul --version 0.7.3
 RUN chmod +x envconsul
+
+# Define working directory.
+WORKDIR /root
+
+#####
+# git-crypt build stage
+#####
+FROM amazonlinux:2 AS git-crypt-build
 
 # install dependencies
 RUN yum update -y && \
@@ -100,6 +111,11 @@ RUN curl --connect-timeout 5 --speed-limit 10000 --speed-time 5 --location \
     && tar xzf /git-crypt-0.6.0.tar.gz \
     && cd /git-crypt-0.6.0 \
     && make install
+		
+#####
+# Image build
+#####
+FROM amazonlinux:2 
 
 
 # install dependencies
@@ -107,24 +123,19 @@ RUN yum update -y && \
     yum install -y git openssl jq && \
     yum -y clean all && \
     rm -rf /var/cache/yum
-    
+
+
 # Create EP directories and files
 RUN    mkdir -p /ep/conf \
     && mkdir -p /ep/assets \
     && echo "# an empty ep.properties file" > /ep/conf/ep.properties
 
 # Add the vault and envconsul binaries
-COPY /vault /ep
-COPY /envconsul /ep
+COPY --from=hashicorp-downloader /vault /ep
+COPY --from=hashicorp-downloader /envconsul /ep
 
 # Add git-crypt binaries
-COPY /usr/local/bin/git-crypt /usr/local/bin/git-crypt    
-# Set environment variables.
-ENV HOME /root
-ENV JAVA_HOME /usr/lib/jvm/zulu-8
-
-# Define working directory.
-WORKDIR /root
+COPY --from=git-crypt-build /usr/local/bin/git-crypt /usr/local/bin/git-crypt		
 
 # Install tini-init
 COPY --from=tiniinitdownloader /tini /opt/bin/
